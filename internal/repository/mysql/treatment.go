@@ -104,3 +104,26 @@ func (d *TreatmentDB) GetMedicineNextTreatment(name string) (*medicine.MedicineR
 	item.TimeTaken = parsedTimeTaken
 	return &item, nil
 }
+
+func (db *TreatmentDB) GetAllMedicinesNextTreatment() ([]medicine.MedicineRecord, error) {
+	query := `select m.name, date_add(tt.recorded_time_taken, interval m.time_period_hr hour) as recorded_time from medicine m inner join treatment_time tt on tt.medicine_id = m.id where tt.recorded_time_taken = ( select max(treatment_time.recorded_time_taken) from medicine inner join treatment_time on treatment_time.medicine_id = medicine.id where medicine.name = m.name) group by m.name, recorded_time;`
+	rows, err := db.conn.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	records := make([]medicine.MedicineRecord, 0)
+	for rows.Next() {
+		mr := medicine.MedicineRecord{}
+		var nextTime string
+		rows.Scan(&mr.Name, &nextTime)
+		parsedTimeTaken, err := time.Parse(datetime, nextTime)
+		if err != nil {
+			return nil, err
+		}
+		mr.TimeTaken = parsedTimeTaken
+		records = append(records, mr)
+	}
+	return records, nil
+}

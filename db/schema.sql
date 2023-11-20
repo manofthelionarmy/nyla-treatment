@@ -25,7 +25,7 @@ INSERT INTO medicine(name, type, time_period_hr) VALUES(
 );
 
 INSERT INTO medicine(name, type, time_period_hr) VALUES(
-  'Antimax',
+  'Animax',
   'Anti-infection Ointment',
   12
 );
