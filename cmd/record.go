@@ -5,7 +5,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"nylatreatment/internal/repository/mysql"
@@ -26,11 +25,6 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		db, err := mysql.NewTreatmentDB()
-		if err != nil {
-			log.Fatal(err)
-		}
-		svc := treatment.NewService(db)
 
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -51,11 +45,20 @@ to quickly create a Cobra application.`,
 
 		year, month, day, hour, minute := getRecordedTime(timeRecordedFlagValue, dayRecordedFlag)
 
+		db, err := mysql.NewTreatmentDB()
+		if err != nil {
+			log.Fatal(err)
+		}
+		svc := treatment.NewService(db)
+
 		recordedTimeEntry := time.Date(
 			year, month,
 			day, hour,
 			minute, 0, 0, time.Now().Location())
-		svc.Record(name, recordedTimeEntry)
+		// handle error here
+		if err := svc.Record(name, recordedTimeEntry); err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -85,37 +88,25 @@ func getRecordedTime(recordedTime, recordedDay string) (
 	minute int,
 ) {
 
+	// initialize these values
+	year, month, day = time.Now().Date()
+	hour, minute, _ = time.Now().Clock()
+
+	// overwrite hour and minute if we pass in a time
 	if recordedTime != "" {
 		parsedRecordedTime, err := time.Parse("15:04 PM", recordedTime)
-		if err != nil && errors.Is(err, &time.ParseError{}) {
+		if err != nil {
 			log.Fatal(fmt.Errorf("expecting a time format of HH:MM PM"))
 		}
-		hour = parsedRecordedTime.Hour()
-		minute = parsedRecordedTime.Minute()
+		hour, minute, _ = parsedRecordedTime.Clock()
 	}
+	// overwrite year, month, and ay if we pass in a date
 	if recordedDay != "" {
 		parsedRecordedDay, err := time.Parse("2006-12-06", recordedDay)
-		if err != nil && errors.Is(err, &time.ParseError{}) {
+		if err != nil {
 			log.Fatal(fmt.Errorf("expecting a date format of YYYY-MM-DD"))
 		}
-		year = parsedRecordedDay.Day()
-		month = parsedRecordedDay.Month()
-		day = parsedRecordedDay.Day()
-	}
-	if year == 0 {
-		year = time.Now().Year()
-	}
-	if month == 0 {
-		month = time.Now().Month()
-	}
-	if day == 0 {
-		day = time.Now().Day()
-	}
-	if hour == 0 {
-		hour = time.Now().Hour()
-	}
-	if minute == 0 {
-		minute = time.Now().Minute()
+		year, month, day = parsedRecordedDay.Date()
 	}
 	return
 }
