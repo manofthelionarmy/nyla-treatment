@@ -38,3 +38,12 @@ func TestMedicineLatestTreatment(t *testing.T) {
 	require.NotNil(t, item)
 	fmt.Println(item)
 }
+
+func TestGetMedicineLastTreatment(t *testing.T) {
+	db, err := NewTreatmentDB()
+	require.NoError(t, err)
+	item, err := db.GetMedicineNextTreatment("Prednisolone")
+	require.NoError(t, err)
+	require.NotNil(t, item)
+	fmt.Println(item)
+}

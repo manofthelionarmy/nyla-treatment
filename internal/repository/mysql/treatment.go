@@ -76,3 +76,31 @@ func (d *TreatmentDB) GetMedicineLastTreatment(name string) (*medicine.MedicineR
 	item.TimeTaken = parsedTimeTaken
 	return &item, nil
 }
+
+func (d *TreatmentDB) GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error) {
+	// NOTE: this adds the interval to the date column on every row, I want to add it on one row
+	fmtStr := `
+		select name, date_add(
+			recorded_time, 
+			interval (select time_period_hr from medicine where name = '%s') hour
+			) as recorded_time_taken
+		from (
+			select m.name as name, tt.recorded_time_taken as recorded_time 
+			from treatment_time tt
+			inner join medicine m on m.id = tt.medicine_id 
+			where m.name = '%s' order by tt.id limit 1) as result`
+	query := fmt.Sprintf(fmtStr, name, name)
+	row := d.conn.QueryRow(query)
+	if row.Err() != nil {
+		return nil, row.Err()
+	}
+	item := medicine.MedicineRecord{}
+	var timeTaken string
+	row.Scan(&item.Name, &timeTaken)
+	parsedTimeTaken, err := time.Parse(datetime, timeTaken)
+	if err != nil {
+		return nil, err
+	}
+	item.TimeTaken = parsedTimeTaken
+	return &item, nil
+}

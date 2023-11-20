@@ -7,6 +7,7 @@ type Service interface {
 	List() (medicine.MedicineList, error)
 	GetLatestTreatment() (*medicine.MedicineRecord, error)
 	GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error)
+	GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error)
 }
 
 // NewService initializes our record service
@@ -25,6 +26,7 @@ type Repository interface {
 	List() (medicine.MedicineList, error)
 	GetLatestTreatment() (*medicine.MedicineRecord, error)
 	GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error)
+	GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error)
 }
 
 func (s *service) List() (medicine.MedicineList, error) {
@@ -37,4 +39,8 @@ func (s *service) GetLatestTreatment() (*medicine.MedicineRecord, error) {
 
 func (s *service) GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error) {
 	return s.repo.GetMedicineLastTreatment(name)
+}
+
+func (s *service) GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error) {
+	return s.repo.GetMedicineNextTreatment(name)
 }
