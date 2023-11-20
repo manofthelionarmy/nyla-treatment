@@ -8,7 +8,7 @@ import (
 // Service is our record service
 type Service interface {
 	Record(name string, timeRecorded time.Time) error
-	GetLatestTreatment() (*medicine.MedicineRecord, error)
+	GetAllMedicineLatestTreatment() ([]medicine.MedicineRecord, error)
 	GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error)
 	GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error)
 	GetAllMedicinesNextTreatment() ([]medicine.MedicineRecord, error)
@@ -28,7 +28,7 @@ type service struct {
 // Repository states our api for retrieving data
 type Repository interface {
 	Record(record medicine.MedicineRecord) error
-	GetLatestTreatment() (*medicine.MedicineRecord, error)
+	GetAllMedicineLatestTreatment() ([]medicine.MedicineRecord, error)
 	GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error)
 	GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error)
 	GetAllMedicinesNextTreatment() ([]medicine.MedicineRecord, error)
@@ -43,8 +43,8 @@ func (s *service) Record(name string, timeRecorded time.Time) error {
 	return s.repo.Record(medicineRecord)
 }
 
-func (s *service) GetLatestTreatment() (*medicine.MedicineRecord, error) {
-	return s.repo.GetLatestTreatment()
+func (s *service) GetAllMedicineLatestTreatment() ([]medicine.MedicineRecord, error) {
+	return s.repo.GetAllMedicineLatestTreatment()
 }
 
 func (s *service) GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error) {

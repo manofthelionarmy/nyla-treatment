@@ -35,24 +35,26 @@ func (d *TreatmentDB) Record(record medicine.MedicineRecord) error {
 	return nil
 }
 
-func (d *TreatmentDB) GetLatestTreatment() (*medicine.MedicineRecord, error) {
-	query := `select m.name, tt.recorded_time_taken 
-	from treatment_time tt inner join medicine m
-	on tt.medicine_id = m.id
-	order by tt.id desc limit 1;`
-	row := d.conn.QueryRow(query)
-	if row.Err() != nil {
-		return nil, row.Err()
-	}
-	item := medicine.MedicineRecord{}
-	var timeTaken string
-	row.Scan(&item.Name, &timeTaken)
-	parsedTimeTaken, err := time.Parse(datetime, timeTaken)
+func (d *TreatmentDB) GetAllMedicineLatestTreatment() ([]medicine.MedicineRecord, error) {
+	query := `select m.name, tt.recorded_time_taken from medicine m inner join treatment_time tt on tt.medicine_id = m.id where tt.recorded_time_taken = ( select max(treatment_time.recorded_time_taken) from medicine inner join treatment_time on treatment_time.medicine_id = medicine.id where medicine.name = m.name) group by m.name, tt.recorded_time_taken;`
+	rows, err := d.conn.Query(query)
 	if err != nil {
 		return nil, err
 	}
-	item.TimeTaken = parsedTimeTaken
-	return &item, nil
+	defer rows.Close()
+	result := make([]medicine.MedicineRecord, 0)
+	for rows.Next() {
+		item := medicine.MedicineRecord{}
+		var timeTaken string
+		rows.Scan(&item.Name, &timeTaken)
+		parsedTimeTaken, err := time.Parse(datetime, timeTaken)
+		if err != nil {
+			return nil, err
+		}
+		item.TimeTaken = parsedTimeTaken
+		result = append(result, item)
+	}
+	return result, nil
 }
 
 func (d *TreatmentDB) GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error) {

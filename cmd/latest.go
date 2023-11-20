@@ -44,17 +44,23 @@ to quickly create a Cobra application.`,
 
 		defaultFmt := "Mon, Jan _2, 2006 3:04PM"
 
-		timeTaken := medicineRecord.TimeTaken.Format(defaultFmt)
-		tbl.Append([]string{medicineRecord.Name, timeTaken})
+		for _, mr := range medicineRecord {
+			timeTaken := mr.TimeTaken.Format(defaultFmt)
+			tbl.Append([]string{mr.Name, timeTaken})
+		}
 		tbl.Render()
 	},
 }
 
-func getLatestMedicineRecord(svc treatment.Service, name string) (*medicine.MedicineRecord, error) {
-	if name != "" {
-		return svc.GetMedicineLastTreatment(name)
+func getLatestMedicineRecord(svc treatment.Service, name string) ([]medicine.MedicineRecord, error) {
+	if name == "" {
+		return svc.GetAllMedicineLatestTreatment()
 	}
-	return svc.GetLatestTreatment()
+	mr, err := svc.GetMedicineLastTreatment(name)
+	if err != nil {
+		return nil, err
+	}
+	return []medicine.MedicineRecord{*mr}, nil
 }
 
 func init() {
