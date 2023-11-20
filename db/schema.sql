@@ -20,7 +20,7 @@ CREATE TABLE treatment_time(
 
 INSERT INTO medicine(name, type, time_period_hr) VALUES(
   'Prednisolone',
-  'Anti-Inflammatory Steriod',
+  'Anti-Inflammatory Steroid',
   12
 );
 

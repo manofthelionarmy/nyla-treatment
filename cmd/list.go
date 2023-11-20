@@ -5,8 +5,13 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"nylatreatment/internal/model/medicine"
+	"nylatreatment/internal/repository/mysql"
+	"nylatreatment/internal/service/medicine/list"
+	"os"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +26,36 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		repo, err := mysql.NewMedicineDB()
+		if err != nil {
+			log.Fatal(err)
+		}
+		svc := list.NewService(repo)
+		medicineList, err := svc.List()
+
+		filterByName, err := cmd.Flags().GetString("filter-by-name")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if filterByName != "" {
+			medicineList = medicineList.Filter(medicine.FilterByName(filterByName))
+		}
+
+		filterByType, err := cmd.Flags().GetString("filter-by-type")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if filterByType != "" {
+			medicineList = medicineList.Filter(medicine.FilterByType(filterByType))
+		}
+
+		tbl := tablewriter.NewWriter(os.Stdout)
+		tbl.SetHeader([]string{"Name", "Type"})
+		for _, m := range medicineList {
+			tbl.Append([]string{m.Name, m.Type})
+		}
+		tbl.Render()
 	},
 }
 
@@ -37,4 +71,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	listCmd.Flags().String("filter-by-name", "", "Filter medicine by name. Example --filter-by-name='something'")
+	listCmd.Flags().String("filter-by-type", "", "Filter medicine by type. Example --filter-by-type='something'")
 }
