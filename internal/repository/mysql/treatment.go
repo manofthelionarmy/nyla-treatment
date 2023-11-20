@@ -88,7 +88,7 @@ func (d *TreatmentDB) GetMedicineNextTreatment(name string) (*medicine.MedicineR
 			select m.name as name, tt.recorded_time_taken as recorded_time 
 			from treatment_time tt
 			inner join medicine m on m.id = tt.medicine_id 
-			where m.name = '%s' order by tt.id limit 1) as result`
+			where m.name = '%s' order by tt.recorded_time_taken desc limit 1) as result`
 	query := fmt.Sprintf(fmtStr, name, name)
 	row := d.conn.QueryRow(query)
 	if row.Err() != nil {
