@@ -38,3 +38,5 @@ This is a project containing information about nyla's treatment.
 # Next feature:
     - Use google calendar api to send calendar invite for reminder
         - This will be via a command
+# Other operational concerns:
+    - Dump the database to back up the contents of the db
