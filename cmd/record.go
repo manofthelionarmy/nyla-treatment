@@ -70,6 +70,8 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// recordCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// TODO: provide option to query by type
 	recordCmd.PersistentFlags().String("name", "", "The name of the medicine")
 	recordCmd.MarkFlagRequired("name")
 

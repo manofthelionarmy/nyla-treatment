@@ -34,3 +34,7 @@ This is a project containing information about nyla's treatment.
 
 # How to insert into table with fk:
     - https://stackoverflow.com/a/15523692
+
+# Next feature:
+    - Use google calendar api to send calendar invite for reminder
+        - This will be via a command
