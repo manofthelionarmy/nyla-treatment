@@ -40,7 +40,7 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 		tbl := tablewriter.NewWriter(os.Stdout)
-		tbl.SetHeader([]string{"Name", "Time Taken"})
+		tbl.SetHeader([]string{"Name", "Latest"})
 
 		defaultFmt := "Mon, Jan _2, 2006 3:04PM"
 
