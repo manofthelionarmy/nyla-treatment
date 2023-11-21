@@ -58,7 +58,7 @@ func (d *TreatmentDB) GetAllMedicineLatestTreatment() ([]medicine.MedicineRecord
 }
 
 func (d *TreatmentDB) GetMedicineLastTreatment(name string) (*medicine.MedicineRecord, error) {
-	fmtStr := `select m.name, tt.recorded_time_taken 
+	fmtStr := `select m.name, tt.recorded_time_taken
 	from treatment_time tt inner join medicine m
 	on tt.medicine_id = m.id
 	where m.name = '%s'
@@ -80,16 +80,17 @@ func (d *TreatmentDB) GetMedicineLastTreatment(name string) (*medicine.MedicineR
 }
 
 func (d *TreatmentDB) GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error) {
+	// why don't I add a new column that performs this calculation on each entry?
 	// NOTE: this adds the interval to the date column on every row, I want to add it on one row
 	fmtStr := `
 		select name, date_add(
-			recorded_time, 
+			recorded_time,
 			interval (select time_period_hr from medicine where name = '%s') hour
 			) as recorded_time_taken
 		from (
-			select m.name as name, tt.recorded_time_taken as recorded_time 
+			select m.name as name, tt.recorded_time_taken as recorded_time
 			from treatment_time tt
-			inner join medicine m on m.id = tt.medicine_id 
+			inner join medicine m on m.id = tt.medicine_id
 			where m.name = '%s' order by tt.recorded_time_taken desc limit 1) as result`
 	query := fmt.Sprintf(fmtStr, name, name)
 	row := d.conn.QueryRow(query)
