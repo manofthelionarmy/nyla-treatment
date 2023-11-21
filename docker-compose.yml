@@ -13,7 +13,21 @@ services:
       - mysql
     volumes:
       - mysql:/var/lib/mysql
-    
+  backup:
+    container_name: backup_nyla_treatment
+    image: nyla_treatment_db:latest
+    networks:
+      - mysql
+    volumes:
+      - ./db/backup/:/backup/
+  restore:
+    container_name: restore_nyla_treatment
+    image: nyla_treatment_db:latest
+    networks:
+      - mysql
+    volumes:
+      - ./db/backup/nyla_treatment.sql:/backup/nyla_treatment.sql
+
   # pgadmin:
   #   container_name: pgadmin_container
   #   image: dpage/pgadmin4
