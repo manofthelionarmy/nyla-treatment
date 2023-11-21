@@ -24,7 +24,7 @@ func TestEnterRecord(t *testing.T) {
 func TestLatestRecord(t *testing.T) {
 	db, err := NewTreatmentDB()
 	require.NoError(t, err)
-	item, err := db.GetLatestTreatment()
+	item, err := db.GetAllMedicineLatestTreatment()
 	require.NoError(t, err)
 	require.NotNil(t, item)
 	fmt.Println(item)
