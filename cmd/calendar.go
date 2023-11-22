@@ -1,28 +1,19 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // calendarCmd represents the calendar command
 var calendarCmd = &cobra.Command{
 	Use:   "calendar",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("calendar called")
-	},
+	Short: "View or add calendar events",
+	Long: `Uses google calendar api to add calendar 
+events with email reminders for the 
+next time nyla has to take her medicine`,
 }
 
 func init() {
