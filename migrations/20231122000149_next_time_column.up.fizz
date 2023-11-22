@@ -1,0 +1,2 @@
+add_column("treatment_time", "next_treatment_time", "datetime", {"null": false})
+sql("update treatment_time set next_treatment_time = date_add(recorded_time_taken, interval (select time_period_hr from medicine where medicine_id = id) hour)")

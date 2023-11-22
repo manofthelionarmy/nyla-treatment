@@ -1,0 +1,1 @@
+drop_column("treatment_time", "next_treatment_time")
