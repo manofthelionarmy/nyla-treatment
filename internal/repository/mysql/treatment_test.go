@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: fix tests
 func TestEnterRecord(t *testing.T) {
 	db, err := NewTreatmentDB()
 	require.NoError(t, err)

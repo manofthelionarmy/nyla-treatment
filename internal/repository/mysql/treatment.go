@@ -123,6 +123,7 @@ from medicine inner join treatment_time on treatment_time.medicine_id = medicine
 		mr := medicine.MedicineRecord{}
 		var nextTime string
 		rows.Scan(&mr.Name, &nextTime)
+		// TODO: fix this when it's null, actually, we should set a rule in the db where an entry shouldn't be null
 		parsedTimeTaken, err := time.Parse(datetime, nextTime)
 		if err != nil {
 			return nil, err
