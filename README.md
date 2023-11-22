@@ -19,6 +19,7 @@ This is a project containing information about nyla's treatment.
         - id (pk)
         - recorded_time_taken (YYYY-MM-DD HH:MI:SS)
         - medicine (fk)
+        - next_time_taken (YYYY-MM-DD HH:MI:SS)
 # Time format
     - We will use `datetime`, (i.e. YYYY-MM-DD HH:MI:SS). 
 # Time Utilities

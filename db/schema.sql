@@ -15,6 +15,7 @@ CREATE TABLE treatment_time(
   recorded_time_taken datetime,
   medicine_id integer unsigned not null,
   constraint fk_treatment_time_medicine FOREIGN KEY(medicine_id) REFERENCES medicine(id),
+  next_time_taken datetime,
   PRIMARY KEY(id)
 );
 
