@@ -4,9 +4,12 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"nylatreatment/internal/cloud/google"
+	"nylatreatment/internal/repository/mysql"
 	"nylatreatment/internal/service/calendar"
+	"nylatreatment/internal/service/treatment"
 
 	"github.com/spf13/cobra"
 )
@@ -22,9 +25,29 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		svc := google.NewCalendarService()
-		adapter := calendar.NewAdapter(svc)
-		err := adapter.AddToCalendar()
+		name, err := cmd.Flags().GetString("name")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		calendarSvc := google.NewCalendarService()
+		adapter := calendar.NewAdapter(calendarSvc)
+
+		repo, err := mysql.NewTreatmentDB()
+		if err != nil {
+			log.Fatal(err)
+		}
+		treatmentSvc := treatment.NewService(repo)
+		if name == "" {
+			fmt.Println("add all treatments to the calendar")
+			return
+		}
+		mr, err := treatmentSvc.GetMedicineNextTreatment(name)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = adapter.AddToCalendar(*mr)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,5 +65,5 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	addCmd.Flags().String("name", "", "This value is the name of the medicine and it's next treatment time will be added to google calendar")
 }

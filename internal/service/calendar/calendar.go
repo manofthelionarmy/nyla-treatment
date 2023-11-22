@@ -1,7 +1,11 @@
 package calendar
 
+import (
+	"nylatreatment/internal/model/medicine"
+)
+
 type Adapter interface {
-	AddToCalendar() error
+	AddToCalendar(mr medicine.MedicineRecord) error
 }
 
 type adapter struct {
@@ -15,9 +19,9 @@ func NewAdapter(svc Service) Adapter {
 }
 
 type Service interface {
-	AddToCalendar() error
+	AddToCalendar(mr medicine.MedicineRecord) error
 }
 
-func (s *adapter) AddToCalendar() error {
-	return s.svc.AddToCalendar()
+func (s *adapter) AddToCalendar(mr medicine.MedicineRecord) error {
+	return s.svc.AddToCalendar(mr)
 }

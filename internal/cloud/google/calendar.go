@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"nylatreatment/internal/model/medicine"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -25,7 +27,7 @@ type Config struct {
 	tokenFile       string
 }
 
-// DefaultConfig is this
+// DefaultConfig stores default values
 var DefaultConfig = Config{
 	credentialsFile: ".config/nyla-treatment/credentials.json",
 	tokenFile:       ".config/nyla-treatment/token.json",
@@ -42,6 +44,8 @@ func NewCalendarService(opts ...CalendarServiceOpt) *CalendarService {
 	DefaultConfig.credentialsFile = filepath.Join(homedir, DefaultConfig.credentialsFile)
 	DefaultConfig.tokenFile = filepath.Join(homedir, DefaultConfig.tokenFile)
 
+	// TODO: override defaults by detecting config.json in .config/nyla-treatment/config.json
+
 	svc := CalendarService{
 		cfg: DefaultConfig,
 	}
@@ -52,7 +56,8 @@ func NewCalendarService(opts ...CalendarServiceOpt) *CalendarService {
 	return &svc
 }
 
-func (svc CalendarService) AddToCalendar() error {
+// AddToCalendar adds a calendar event to google calendar
+func (svc CalendarService) AddToCalendar(medicineRecord medicine.MedicineRecord) error {
 	ctx := context.Background()
 	b, err := os.ReadFile(svc.cfg.credentialsFile)
 	if err != nil {
@@ -67,9 +72,22 @@ func (svc CalendarService) AddToCalendar() error {
 	}
 	client := getClient(config, svc.cfg.tokenFile)
 
-	_, err = calendar.NewService(ctx, option.WithHTTPClient(client))
+	calendarSvc, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return fmt.Errorf("Unable to retrieve Calendar client: %v", err)
+	}
+	event := calendar.Event{
+		Description: medicineRecord.Name + " Treatment",
+		OriginalStartTime: &calendar.EventDateTime{
+			DateTime: medicineRecord.TimeTaken.String(),
+		},
+		End: &calendar.EventDateTime{
+			DateTime: medicineRecord.TimeTaken.Add(15 * time.Minute).String(),
+		},
+	}
+	_, err = calendarSvc.Events.Insert("primary", &event).Do()
+	if err != nil {
+		return err
 	}
 
 	// t := time.Now().Format(time.RFC3339)
@@ -134,7 +152,7 @@ func getClient(config *oauth2.Config, tokenFileDestination string) *http.Client 
 	return config.Client(context.Background(), tok)
 }
 
-func printAuthUrl(config *oauth2.Config) {
+func printAuthURL(config *oauth2.Config) {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	fmt.Printf("Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
@@ -143,11 +161,12 @@ func printAuthUrl(config *oauth2.Config) {
 
 // Request a token from the web, then returns the retrieved token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	printAuthUrl(config)
+	printAuthURL(config)
 
 	serverMux := http.NewServeMux()
 	tokCh := make(chan *oauth2.Token)
 	serverMux.HandleFunc("/auth", getAuthCode(config, tokCh))
+	// TODO: make configurable
 	server := http.Server{
 		Addr:    ":8081",
 		Handler: serverMux,
