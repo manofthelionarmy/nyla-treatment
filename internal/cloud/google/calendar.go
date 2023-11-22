@@ -136,7 +136,7 @@ func getAuthCode(config *oauth2.Config, tokCh chan *oauth2.Token) http.HandlerFu
 
 		tok, err := config.Exchange(context.TODO(), authCode)
 		if err != nil {
-			log.Println("Unable to retrieve token from web: %v", err)
+			log.Printf("Unable to retrieve token from web: %v", err)
 			tokCh <- nil
 			return
 		}
