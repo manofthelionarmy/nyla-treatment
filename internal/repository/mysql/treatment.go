@@ -82,13 +82,10 @@ func (d *TreatmentDB) GetMedicineLastTreatment(name string) (*medicine.MedicineR
 func (d *TreatmentDB) GetMedicineNextTreatment(name string) (*medicine.MedicineRecord, error) {
 	// why don't I add a new column that performs this calculation on each entry?
 	// NOTE: this adds the interval to the date column on every row, I want to add it on one row
-	fmtStr := `
-		select name, next_treatment_time
-		from (
-			select m.name as name, tt.next_treatment_time as next_treatment_time
+	fmtStr := `select m.name as name, tt.next_treatment_time as next_treatment_time
 			from treatment_time tt
 			inner join medicine m on m.id = tt.medicine_id
-			where m.name = '%s' order by tt.recorded_time_taken desc limit 1) as result`
+			where m.name = '%s' order by tt.recorded_time_taken desc limit 1`
 	query := fmt.Sprintf(fmtStr, name)
 	row := d.conn.QueryRow(query)
 	if row.Err() != nil {
@@ -106,7 +103,8 @@ func (d *TreatmentDB) GetMedicineNextTreatment(name string) (*medicine.MedicineR
 }
 
 func (db *TreatmentDB) GetAllMedicinesNextTreatment() ([]medicine.MedicineRecord, error) {
-	query := `select m.name, next_treatment_time from medicine m inner join treatment_time tt on tt.medicine_id = m.id where tt.recorded_time_taken = ( select max(treatment_time.recorded_time_taken) from medicine inner join treatment_time on treatment_time.medicine_id = medicine.id where medicine.name = m.name) group by m.name, next_treatment_time;`
+	query := `select m.name, next_treatment_time from medicine m inner join treatment_time tt on tt.medicine_id = m.id where tt.recorded_time_taken = ( select max(treatment_time.recorded_time_taken)
+from medicine inner join treatment_time on treatment_time.medicine_id = medicine.id where medicine.name = m.name);`
 	rows, err := db.conn.Query(query)
 	if err != nil {
 		return nil, err
