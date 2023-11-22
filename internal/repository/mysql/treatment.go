@@ -26,8 +26,15 @@ func NewTreatmentDB() (*TreatmentDB, error) {
 
 func (d *TreatmentDB) Record(record medicine.MedicineRecord) error {
 	timeRecorded := record.TimeTaken.Format(datetime)
-	query := fmt.Sprintf(`insert into treatment_time(recorded_time_taken, medicine_id) values(?, (select id from medicine where name = '%s') )`, record.Name)
-	_, err := d.conn.Exec(query, timeRecorded)
+	intervalQuery := "select time_period_hr from medicine where name = ?"
+	row := d.conn.QueryRow(intervalQuery, record.Name)
+	if row.Err() != nil {
+		return row.Err()
+	}
+	var interval int
+	row.Scan(&interval)
+	query := fmt.Sprintf(`insert into treatment_time(recorded_time_taken, medicine_id, next_treatment_time) values(?, (select id from medicine where name = ?), date_add(?, interval ? hour) )`)
+	_, err := d.conn.Exec(query, timeRecorded, record.Name, timeRecorded, interval)
 	if err != nil {
 		return err
 	}
