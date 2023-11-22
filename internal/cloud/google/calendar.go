@@ -9,6 +9,7 @@ import (
 	"nylatreatment/internal/model/medicine"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -76,39 +77,56 @@ func (svc CalendarService) AddToCalendar(medicineRecord medicine.MedicineRecord)
 	if err != nil {
 		return fmt.Errorf("Unable to retrieve Calendar client: %v", err)
 	}
+
+	// because the db has a different timezone, I have to make sure I get it set up correctly in the application
+	startTime := convertToRFC339(medicineRecord.TimeTaken)
+	endTime := convertToRFC339(medicineRecord.TimeTaken.Add(15 * time.Minute))
 	event := calendar.Event{
+		Summary:     "Time for Medicine",
 		Description: medicineRecord.Name + " Treatment",
-		OriginalStartTime: &calendar.EventDateTime{
-			DateTime: medicineRecord.TimeTaken.String(),
+		Start: &calendar.EventDateTime{
+			DateTime: startTime,
+			TimeZone: time.Now().Local().String(),
 		},
 		End: &calendar.EventDateTime{
-			DateTime: medicineRecord.TimeTaken.Add(15 * time.Minute).String(),
+			DateTime: endTime,
+			TimeZone: time.Now().Local().String(),
+		},
+		Reminders: &calendar.EventReminders{
+			UseDefault: false,
+			Overrides: []*calendar.EventReminder{
+				&calendar.EventReminder{
+					Method:  "email",
+					Minutes: 30,
+				},
+				&calendar.EventReminder{
+					Method:  "email",
+					Minutes: 15,
+				},
+			},
+			// https://stackoverflow.com/a/65441406
+			ForceSendFields: []string{"UseDefault"},
 		},
 	}
-	_, err = calendarSvc.Events.Insert("primary", &event).Do()
+	generatedEvent, err := calendarSvc.Events.Insert("primary", &event).Do()
 	if err != nil {
 		return err
 	}
 
-	// t := time.Now().Format(time.RFC3339)
-	// events, err := srv.Events.List("primary").ShowDeleted(false).
-	// 	SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
-	// if err != nil {
-	// 	return fmt.Errorf("Unable to retrieve next ten of the user's events: %v", err)
-	// }
-	// fmt.Println("Upcoming events:")
-	// if len(events.Items) == 0 {
-	// 	fmt.Println("No upcoming events found.")
-	// } else {
-	// 	for _, item := range events.Items {
-	// 		date := item.Start.DateTime
-	// 		if date == "" {
-	// 			date = item.Start.Date
-	// 		}
-	// 		fmt.Printf("%v (%v)\n", item.Summary, date)
-	// 	}
-	// }
+	sb := strings.Builder{}
+	sb.WriteString("Calendar Event Created!" + "\n")
+	sb.WriteString("Summary: " + generatedEvent.Summary + "\n")
+	sb.WriteString("Start Time: " + medicineRecord.TimeTaken.Format("Mon, Jan _2 3:04PM") + "\n")
+	sb.WriteString("calendar link: " + generatedEvent.HtmlLink + "\n")
+	fmt.Println(sb.String())
 	return nil
+}
+
+func convertToRFC339(t time.Time) string {
+	year, month, day := t.Date()
+	hour, minute, _ := t.Clock()
+	newTime := time.Date(year, month, day, hour, minute, 0, 0, time.Now().Location())
+	return newTime.Format(time.RFC3339)
 }
 
 func getAuthCode(config *oauth2.Config, tokCh chan *oauth2.Token) http.HandlerFunc {
