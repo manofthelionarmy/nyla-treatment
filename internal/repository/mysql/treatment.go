@@ -25,16 +25,25 @@ func NewTreatmentDB() (*TreatmentDB, error) {
 }
 
 func (d *TreatmentDB) Record(record medicine.MedicineRecord) error {
-	timeRecorded := record.TimeTaken.Format(datetime)
-	intervalQuery := "select time_period_hr from medicine where name = ?"
+	intervalQuery := "select id, time_period_hr from medicine where name = ?"
 	row := d.conn.QueryRow(intervalQuery, record.Name)
 	if row.Err() != nil {
 		return row.Err()
 	}
-	var interval int
-	row.Scan(&interval)
-	query := fmt.Sprintf(`insert into treatment_time(recorded_time_taken, medicine_id, next_treatment_time) values(?, (select id from medicine where name = ?), date_add(?, interval ? hour) )`)
-	_, err := d.conn.Exec(query, timeRecorded, record.Name, timeRecorded, interval)
+	var medicineID, interval int
+	err := row.Scan(&medicineID, &interval)
+	if err != nil {
+		return err
+	}
+
+	// the date format is datetime in mysql
+	timeRecorded := record.TimeTaken.Format(datetime)
+
+	// at the application level, add 12 hours
+	nextTime := record.TimeTaken.Add(time.Duration(interval) * time.Hour).Format(datetime)
+
+	stmt := fmt.Sprintf(`insert into treatment_time(recorded_time_taken, medicine_id, next_treatment_time) values(?, ?, ?)`)
+	_, err = d.conn.Exec(stmt, timeRecorded, medicineID, nextTime)
 	if err != nil {
 		return err
 	}
